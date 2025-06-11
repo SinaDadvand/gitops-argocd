@@ -1,0 +1,9 @@
+# Namespace for the nginx application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-demo
+  labels:
+    managed-by: argocd
+    environment: staging
+    app-type: web-frontend

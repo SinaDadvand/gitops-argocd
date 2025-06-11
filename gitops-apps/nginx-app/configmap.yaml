@@ -1,0 +1,138 @@
+# ConfigMap for Nginx HTML content
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html-config
+  namespace: nginx-demo
+  labels:
+    app: gitops-nginx
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GitOps Demo - Nginx</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                margin: 0;
+                padding: 20px;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .container {
+                text-align: center;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            h1 { font-size: 3em; margin-bottom: 20px; }
+            .info { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 10px; margin: 20px 0; }
+            .badge { 
+                display: inline-block; 
+                background: #4CAF50; 
+                padding: 5px 15px; 
+                border-radius: 20px; 
+                margin: 5px; 
+                font-size: 0.9em;
+            }
+            a { color: #ffeb3b; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 GitOps Demo Application</h1>
+            <p>This application is managed by ArgoCD using GitOps principles</p>
+            
+            <div class="info">
+                <h3>Application Details</h3>
+                <div class="badge">Environment: Staging</div>
+                <div class="badge">Version: 1.0.0</div>
+                <div class="badge">Managed by: ArgoCD</div>
+                <div class="badge">Source: Personal GitHub Repo</div>
+            </div>
+            
+            <div class="info">
+                <h3>GitOps Features</h3>
+                <p>✅ Declarative configuration in Git</p>
+                <p>✅ Automatic synchronization</p>
+                <p>✅ Version controlled deployments</p>
+                <p>✅ Rollback capabilities</p>
+            </div>
+            
+            <div class="info">
+                <h3>Links</h3>
+                <p><a href="/health">Health Check</a> | <a href="/ready">Readiness Check</a></p>
+                <p><a href="/metrics">Metrics</a> | <a href="/config">Configuration</a></p>
+            </div>
+            
+            <p><small>Deployed: <span id="timestamp"></span></small></p>
+        </div>
+        
+        <script>
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        </script>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-server-config
+  namespace: nginx-demo
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        
+        # Main application
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ =404;
+        }
+        
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Readiness check endpoint
+        location /ready {
+            access_log off;
+            return 200 "ready\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Metrics endpoint (basic)
+        location /metrics {
+            access_log off;
+            return 200 "# nginx metrics\nnginx_up 1\nnginx_connections_active $connections_active\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Configuration endpoint
+        location /config {
+            return 200 '{"app":"gitops-nginx","version":"1.0.0","environment":"staging","namespace":"nginx-demo"}';
+            add_header Content-Type application/json;
+        }
+        
+        # Security headers
+        add_header X-Content-Type-Options nosniff;
+        add_header X-Frame-Options DENY;
+        add_header X-XSS-Protection "1; mode=block";
+        add_header Referrer-Policy strict-origin-when-cross-origin;
+    }

@@ -1,0 +1,84 @@
+
+# GitOps managed Nginx deployment with environment-specific configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-nginx
+  namespace: nginx-demo
+  labels:
+    app: gitops-nginx
+    managed-by: argocd
+    environment: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gitops-nginx
+  template:
+    metadata:
+      labels:
+        app: gitops-nginx
+        version: v1.0
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.23-alpine
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "staging"
+        - name: APP_VERSION
+          value: "1.0.0"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: nginx-html-config
+      - name: nginx-config
+        configMap:
+          name: nginx-server-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitops-nginx-service
+  namespace: nginx-demo
+  labels:
+    app: gitops-nginx
+spec:
+  selector:
+    app: gitops-nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30090
+  type: NodePort
+
+
