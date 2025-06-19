@@ -1,4 +1,3 @@
-```yaml
 # Default values for multi-env-app
 # This will be overridden by environment-specific values
 
@@ -64,5 +63,4 @@ monitoring:
   enabled: false
   path: /metrics
   port: 9090
-```
 
