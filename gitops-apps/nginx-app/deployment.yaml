@@ -30,7 +30,17 @@ spec:
         - name: ENVIRONMENT
           value: "staging"
         - name: APP_VERSION
-          value: "1.0.0"
+          value: "1.2.0"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nginx-demo-secret
+              key: api-key
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nginx-demo-secret
+              key: db-password
         volumeMounts:
         - name: config-volume
           mountPath: /usr/share/nginx/html/index.html
