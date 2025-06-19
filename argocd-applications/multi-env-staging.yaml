@@ -1,0 +1,52 @@
+# ArgoCD Application for Staging Environment
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: multi-env-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: multi-env-staging
+    environment: staging
+    chart-type: helm
+spec:
+  project: default
+  
+  source:
+    # Your personal GitHub repository
+    repoURL: https://github.com/SinaDadvand/gitops-argocd.git
+    targetRevision: HEAD
+    path: helm-charts/multi-env-app
+    
+    # Helm-specific configuration
+    helm:
+      # Use staging values file
+      valueFiles:
+      - values-staging.yaml
+      
+      # Additional value overrides
+      values: |
+        app:
+          version: "1.1.0"
+        
+        # Add staging-specific labels
+        podLabels:
+          deployment-type: "staging"
+          managed-by: "argocd"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: multi-env-staging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    
+    # Sync waves for ordered deployment
+    syncOptions:
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
