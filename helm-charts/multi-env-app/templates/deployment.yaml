@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multi-env-app.fullname" . }}
+  labels:
+    {{- include "multi-env-app.labels" . | nindent 4 }}
+    environment: {{ .Values.app.environment }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "multi-env-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "multi-env-app.selectorLabels" . | nindent 8 }}
+        environment: {{ .Values.app.environment }}
+        version: {{ .Values.app.version }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.security.runAsNonRoot }}
+        runAsUser: {{ .Values.security.runAsUser }}
+        fsGroup: {{ .Values.security.fsGroup }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            {{- if .Values.monitoring.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.monitoring.port }}
+              protocol: TCP
+            {{- end }}
+          env:
+            - name: APP_NAME
+              value: {{ .Values.app.name | quote }}
+            - name: APP_VERSION
+              value: {{ .Values.app.version | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.app.environment | quote }}
+            - name: DATABASE_HOST
+              value: {{ .Values.config.database.host | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.config.database.port | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.config.database.name | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.config.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.config.redis.port | quote }}
+            - name: ENABLE_DEBUG
+              value: {{ .Values.config.features.enableDebug | quote }}
+            - name: ENABLE_METRICS
+              value: {{ .Values.config.features.enableMetrics | quote }}
+            - name: ENABLE_TRACING
+              value: {{ .Values.config.features.enableTracing | quote }}
+          volumeMounts:
+            - name: config
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+            - name: app-config
+              mountPath: /etc/app/config.json
+              subPath: config.json
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "multi-env-app.fullname" . }}-html
+        - name: app-config
+          configMap:
+            name: {{ include "multi-env-app.fullname" . }}-config

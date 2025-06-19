@@ -1,0 +1,33 @@
+# Staging environment overrides
+app:
+  environment: "staging"
+
+replicaCount: 2
+
+service:
+  type: NodePort
+  nodePort: 30100
+
+config:
+  database:
+    host: "staging-db.example.com"
+    name: "app_staging"
+  
+  redis:
+    host: "staging-redis.example.com"
+  
+  features:
+    enableDebug: false
+    enableMetrics: true
+    enableTracing: true
+
+monitoring:
+  enabled: true
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

@@ -1,0 +1,42 @@
+# Production environment overrides
+app:
+  environment: "production"
+
+replicaCount: 4
+
+service:
+  type: NodePort
+  nodePort: 30200
+
+ingress:
+  enabled: true
+  host: app.production.com
+
+config:
+  database:
+    host: "prod-db.example.com"
+    name: "app_production"
+  
+  redis:
+    host: "prod-redis.example.com"
+  
+  features:
+    enableDebug: false
+    enableMetrics: true
+    enableTracing: true
+
+monitoring:
+  enabled: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+security:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 3000

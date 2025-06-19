@@ -1,0 +1,190 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "multi-env-app.fullname" . }}-html
+  labels:
+    {{- include "multi-env-app.labels" . | nindent 4 }}
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ .Values.app.name }} - {{ .Values.app.environment | title }}</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 20px;
+                {{- if eq .Values.app.environment "production" }}
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                {{- else if eq .Values.app.environment "staging" }}
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                {{- else }}
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                {{- end }}
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .container {
+                text-align: center;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+                max-width: 800px;
+            }
+            h1 { font-size: 3em; margin-bottom: 20px; }
+            .env-badge {
+                display: inline-block;
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-weight: bold;
+                font-size: 1.2em;
+                margin: 10px;
+                {{- if eq .Values.app.environment "production" }}
+                background: #e74c3c;
+                {{- else if eq .Values.app.environment "staging" }}
+                background: #f39c12;
+                {{- else }}
+                background: #27ae60;
+                {{- end }}
+            }
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin-top: 30px;
+            }
+            .info-card {
+                background: rgba(0, 0, 0, 0.2);
+                padding: 20px;
+                border-radius: 10px;
+                text-align: left;
+            }
+            .config-item {
+                margin: 10px 0;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 5px;
+            }
+            .feature-enabled { color: #2ecc71; }
+            .feature-disabled { color: #e74c3c; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 {{ .Values.app.name }}</h1>
+            <div class="env-badge">{{ .Values.app.environment | upper }}</div>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>📋 Application Details</h3>
+                    <div class="config-item"><strong>Name:</strong> {{ .Values.app.name }}</div>
+                    <div class="config-item"><strong>Version:</strong> {{ .Values.app.version }}</div>
+                    <div class="config-item"><strong>Environment:</strong> {{ .Values.app.environment }}</div>
+                    <div class="config-item"><strong>Replicas:</strong> {{ .Values.replicaCount }}</div>
+                    <div class="config-item"><strong>Namespace:</strong> {{ .Release.Namespace }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🗄️ Database Configuration</h3>
+                    <div class="config-item"><strong>Host:</strong> {{ .Values.config.database.host }}</div>
+                    <div class="config-item"><strong>Port:</strong> {{ .Values.config.database.port }}</div>
+                    <div class="config-item"><strong>Database:</strong> {{ .Values.config.database.name }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🔴 Redis Configuration</h3>
+                    <div class="config-item"><strong>Host:</strong> {{ .Values.config.redis.host }}</div>
+                    <div class="config-item"><strong>Port:</strong> {{ .Values.config.redis.port }}</div>
+                    <div class="config-item"><strong>Database:</strong> {{ .Values.config.redis.database }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>⚙️ Feature Flags</h3>
+                    <div class="config-item">
+                        <strong>Debug:</strong> 
+                        <span class="{{ if .Values.config.features.enableDebug }}feature-enabled{{ else }}feature-disabled{{ end }}">
+                            {{ if .Values.config.features.enableDebug }}✅ Enabled{{ else }}❌ Disabled{{ end }}
+                        </span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Metrics:</strong> 
+                        <span class="{{ if .Values.config.features.enableMetrics }}feature-enabled{{ else }}feature-disabled{{ end }}">
+                            {{ if .Values.config.features.enableMetrics }}✅ Enabled{{ else }}❌ Disabled{{ end }}
+                        </span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Tracing:</strong> 
+                        <span class="{{ if .Values.config.features.enableTracing }}feature-enabled{{ else }}feature-disabled{{ end }}">
+                            {{ if .Values.config.features.enableTracing }}✅ Enabled{{ else }}❌ Disabled{{ end }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>🔗 Endpoints</h3>
+                <p>
+                    <a href="/health" style="color: #ffeb3b;">Health Check</a> | 
+                    <a href="/ready" style="color: #ffeb3b;">Readiness</a> | 
+                    <a href="/config" style="color: #ffeb3b;">Config JSON</a>
+                    {{- if .Values.monitoring.enabled }}
+                    | <a href="/metrics" style="color: #ffeb3b;">Metrics</a>
+                    {{- end }}
+                </p>
+            </div>
+            
+            <p><small>Deployed with Helm + ArgoCD | {{ now | date "2006-01-02 15:04:05" }}</small></p>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "multi-env-app.fullname" . }}-config
+  labels:
+    {{- include "multi-env-app.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "application": {
+        "name": "{{ .Values.app.name }}",
+        "version": "{{ .Values.app.version }}",
+        "environment": "{{ .Values.app.environment }}",
+        "replicas": {{ .Values.replicaCount }}
+      },
+      "database": {
+        "host": "{{ .Values.config.database.host }}",
+        "port": {{ .Values.config.database.port }},
+        "name": "{{ .Values.config.database.name }}"
+      },
+      "redis": {
+        "host": "{{ .Values.config.redis.host }}",
+        "port": {{ .Values.config.redis.port }},
+        "database": {{ .Values.config.redis.database }}
+      },
+      "features": {
+        "enableDebug": {{ .Values.config.features.enableDebug }},
+        "enableMetrics": {{ .Values.config.features.enableMetrics }},
+        "enableTracing": {{ .Values.config.features.enableTracing }}
+      },
+      "monitoring": {
+        "enabled": {{ .Values.monitoring.enabled }},
+        "path": "{{ .Values.monitoring.path }}",
+        "port": {{ .Values.monitoring.port }}
+      },
+      "kubernetes": {
+        "namespace": "{{ .Release.Namespace }}",
+        "release": "{{ .Release.Name }}",
+        "chart": "{{ .Chart.Name }}",
+        "version": "{{ .Chart.Version }}"
+      }
+    }

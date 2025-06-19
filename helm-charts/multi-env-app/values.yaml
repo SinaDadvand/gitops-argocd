@@ -1,0 +1,68 @@
+```yaml
+# Default values for multi-env-app
+# This will be overridden by environment-specific values
+
+# Application configuration
+app:
+  name: multi-env-app
+  version: "1.0.0"
+  environment: "development"
+
+# Replica configuration
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: nginx
+  tag: "1.24-alpine"
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress configuration
+ingress:
+  enabled: false
+  host: app.local
+
+# Resource limits
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Environment-specific configurations
+config:
+  database:
+    host: "localhost"
+    port: 5432
+    name: "app_dev"
+  
+  redis:
+    host: "localhost"
+    port: 6379
+    database: 0
+  
+  features:
+    enableDebug: true
+    enableMetrics: false
+    enableTracing: false
+
+# Security configuration
+security:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Monitoring
+monitoring:
+  enabled: false
+  path: /metrics
+  port: 9090
+```
+
