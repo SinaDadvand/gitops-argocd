@@ -63,4 +63,3 @@ monitoring:
   enabled: false
   path: /metrics
   port: 9090
-
