@@ -64,8 +64,16 @@ monitoring:
   path: /metrics
   port: 9090
 
+# Service account configuration
 serviceAccount:
   create: true
   automount: true
   annotations: {}
   name: ""
+
+# HPA Auto-scaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
