@@ -60,6 +60,9 @@ spec:
             - name: ENABLE_TRACING
               value: {{ .Values.config.features.enableTracing | quote }}
           volumeMounts:
+            - name: nginx-main-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
             - name: config
               mountPath: /usr/share/nginx/html/index.html
               subPath: index.html
@@ -85,6 +88,9 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
+        - name: nginx-main-config
+          configMap:
+            name: {{ include "multi-env-app.fullname" . }}-nginx-config
         - name: config
           configMap:
             name: {{ include "multi-env-app.fullname" . }}-html
