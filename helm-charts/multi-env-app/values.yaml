@@ -63,3 +63,9 @@ monitoring:
   enabled: false
   path: /metrics
   port: 9090
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
