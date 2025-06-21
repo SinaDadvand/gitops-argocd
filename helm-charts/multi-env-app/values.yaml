@@ -55,8 +55,9 @@ config:
 # Security configuration
 security:
   runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 2000
+  runAsUser: 101      # nginx user ID
+  runAsGroup: 101     # nginx group ID  
+  fsGroup: 101        # ensure volume permissions
 
 # Monitoring
 monitoring:

@@ -1,0 +1,54 @@
+# ArgoCD Application pointing to your personal GitHub repository
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-personal-repo
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: nginx-personal-repo
+    repo-type: personal
+    environment: staging
+spec:
+  # Project that this application belongs to
+  project: default
+  
+  # Source configuration - YOUR personal GitHub repository
+  source:
+    # Replace with your actual GitHub repository URL
+    repoURL: https://github.com/SinaDadvand/gitops-argocd.git
+    targetRevision: HEAD
+    path: gitops-apps/nginx-app
+  
+  # Destination configuration
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-demo
+  
+  # Sync policy for automatic GitOps workflow
+  syncPolicy:
+    # Enable automatic synchronization
+    automated:
+      prune: true        # Remove resources no longer defined in Git
+      selfHeal: true     # Automatically correct drift from desired state
+    
+    # Sync options for enhanced behavior
+    syncOptions:
+    - CreateNamespace=true              # Create namespace if it doesn't exist
+    - PrunePropagationPolicy=foreground # Wait for resources to be deleted
+    - PruneLast=true                    # Prune resources after sync
+    - ApplyOutOfSyncOnly=true          # Only sync resources that are out of sync
+    
+    # Retry configuration for failed syncs
+    retry:
+      limit: 5                         # Maximum retry attempts
+      backoff:
+        duration: 5s                   # Initial retry delay
+        factor: 2                      # Backoff factor
+        maxDuration: 3m                # Maximum retry delay
+  
+  # Health check configuration
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas                   # Ignore replica count differences (for HPA)too
