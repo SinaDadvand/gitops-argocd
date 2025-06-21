@@ -227,3 +227,54 @@ data:
         
         include /etc/nginx/conf.d/*.conf;
     }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "multi-env-app.fullname" . }}-nginx-default
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        
+        # Main application - serve from mounted ConfigMap
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ =404;
+        }
+        
+        # Health check endpoint - return 200 OK
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Readiness check endpoint - return 200 OK  
+        location /ready {
+            access_log off;
+            return 200 "ready\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Config endpoint - return JSON
+        location /config {
+            alias /etc/app/config.json;
+            add_header Content-Type application/json;
+        }
+        
+        # Metrics endpoint (basic)
+        location /metrics {
+            access_log off;
+            return 200 "# nginx metrics\nnginx_up 1\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Security headers
+        add_header X-Content-Type-Options nosniff;
+        add_header X-Frame-Options DENY;
+        add_header X-XSS-Protection "1; mode=block";
+    }

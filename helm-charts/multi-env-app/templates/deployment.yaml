@@ -60,6 +60,9 @@ spec:
             - name: ENABLE_TRACING
               value: {{ .Values.config.features.enableTracing | quote }}
           volumeMounts:
+            - name: nginx-default-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
             - name: nginx-main-config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
@@ -88,6 +91,9 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
+        - name: nginx-default-config
+          configMap:
+            name: {{ include "multi-env-app.fullname" . }}-nginx-default
         - name: nginx-main-config
           configMap:
             name: {{ include "multi-env-app.fullname" . }}-nginx-config
