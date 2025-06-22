@@ -10,7 +10,10 @@ service:
 
 ingress:
   enabled: true
-  host: app.production.com
+  hosts:
+    - host: app.production.com
+      paths:
+        - /
 
 config:
   database:

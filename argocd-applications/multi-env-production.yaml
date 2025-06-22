@@ -1,0 +1,72 @@
+# ArgoCD Application for Production Environment
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: multi-env-production
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: multi-env-production
+    environment: production
+    chart-type: helm
+    criticality: high
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/SinaDadvand/gitops-argocd.git
+    targetRevision: HEAD
+    path: helm-charts/multi-env-app
+    
+    helm:
+      valueFiles:
+      - values-production.yaml
+      
+      values: |
+        app:
+          version: "1.0.0"  # Production stays on stable version
+        
+        # Production-specific overrides
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        
+        # Enhanced security for production
+        security:
+          runAsNonRoot: true
+          runAsUser: 1001
+          fsGroup: 3000
+          seccompProfile:
+            type: RuntimeDefault
+        
+        podLabels:
+          deployment-type: "production"
+          managed-by: "argocd"
+          security-level: "high"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: multi-env-production
+  
+  syncPolicy:
+    # Manual sync for production (more control)
+    automated:
+      prune: false      # Don't auto-prune in production
+      selfHeal: false   # Don't auto-heal in production
+    
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    - RespectIgnoreDifferences=true
+    
+    # Manual approval for production changes
+    retry:
+      limit: 3
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
