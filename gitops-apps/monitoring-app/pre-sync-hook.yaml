@@ -1,0 +1,25 @@
+# Pre-sync hook to prepare the environment
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-sync-hook
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  template:
+    spec:
+      containers:
+      - name: setup
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Preparing monitoring environment..."
+          echo "Checking prerequisites..."
+          echo "Pre-sync hook completed successfully"
+      restartPolicy: Never
+  backoffLimit: 3

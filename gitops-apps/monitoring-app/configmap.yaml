@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>GitOps Monitoring Dashboard</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                background: linear-gradient(135deg, #2c3e50, #3498db);
+                color: white; 
+                padding: 20px; 
+            }
+            .dashboard { 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                background: rgba(0,0,0,0.2); 
+                padding: 30px; 
+                border-radius: 15px; 
+            }
+            .metric-card { 
+                background: rgba(255,255,255,0.1); 
+                padding: 20px; 
+                margin: 10px; 
+                border-radius: 10px; 
+                display: inline-block; 
+                width: 300px; 
+            }
+            .metric-value { font-size: 2em; color: #2ecc71; }
+            .status-ok { color: #2ecc71; }
+            .status-warning { color: #f39c12; }
+        </style>
+        <script>
+            function updateMetrics() {
+                document.getElementById('timestamp').textContent = new Date().toLocaleString();
+                // Simulate some metrics
+                document.getElementById('uptime').textContent = Math.floor(Math.random() * 1000) + 'h';
+                document.getElementById('requests').textContent = Math.floor(Math.random() * 10000);
+                document.getElementById('errors').textContent = Math.floor(Math.random() * 10);
+            }
+            setInterval(updateMetrics, 5000);
+            window.onload = updateMetrics;
+        </script>
+    </head>
+    <body>
+        <div class="dashboard">
+            <h1>🎯 GitOps Monitoring Dashboard</h1>
+            <p>Advanced GitOps deployment with sync waves and hooks</p>
+            
+            <div class="metric-card">
+                <h3>📊 Application Health</h3>
+                <div class="metric-value status-ok">✅ Healthy</div>
+                <p>All components running normally</p>
+            </div>
+            
+            <div class="metric-card">
+                <h3>⏱️ Uptime</h3>
+                <div class="metric-value" id="uptime">0h</div>
+                <p>Time since last deployment</p>
+            </div>
+            
+            <div class="metric-card">
+                <h3>📈 Requests/min</h3>
+                <div class="metric-value" id="requests">0</div>
+                <p>Current request rate</p>
+            </div>
+            
+            <div class="metric-card">
+                <h3>⚠️ Errors</h3>
+                <div class="metric-value status-warning" id="errors">0</div>
+                <p>Errors in last hour</p>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>🔗 GitOps Features Demonstrated</h3>
+                <ul>
+                    <li>✅ Sync Waves for ordered deployment</li>
+                    <li>✅ Pre-sync hooks for environment preparation</li>
+                    <li>✅ Post-sync hooks for validation</li>
+                    <li>✅ Health checks and custom health assessment</li>
+                    <li>✅ Ignore differences for auto-scaling</li>
+                    <li>✅ Notification hooks for Slack/Email</li>
+                </ul>
+            </div>
+            
+            <p><small>Last updated: <span id="timestamp"></span></small></p>
+        </div>
+    </body>
+    </html>

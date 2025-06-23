@@ -1,0 +1,45 @@
+# Post-sync hook for validation and notifications
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-sync-hook
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  template:
+    spec:
+      containers:
+      - name: validation
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Running post-sync validation..."
+          
+          # Wait for service to be ready
+          sleep 30
+          
+          # Validate the application is responding
+          if curl -f http://monitoring-service/health; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed"
+            exit 1
+          fi
+          
+          # Check readiness
+          if curl -f http://monitoring-service/ready; then
+            echo "✅ Readiness check passed"
+          else
+            echo "❌ Readiness check failed"
+            exit 1
+          fi
+          
+          echo "🎉 Post-sync validation completed successfully"
+          echo "Application is ready to serve traffic"
+      restartPolicy: Never
+  backoffLimit: 3

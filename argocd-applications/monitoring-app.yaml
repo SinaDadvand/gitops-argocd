@@ -1,0 +1,81 @@
+# Application with advanced GitOps features
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: advanced-monitoring-app
+  namespace: argocd
+  labels:
+    tier: monitoring
+    managed-by: argocd
+  annotations:
+    # Notification settings
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: gitops-notifications
+    notifications.argoproj.io/subscribe.on-health-degraded.email: sina.dadvand@gmail.com
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/SinaDadvand/k8s-helm.git
+    targetRevision: HEAD
+    path: gitops-apps/monitoring-app
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    
+    # Sync waves for ordered deployment
+    - SyncWave=0  # Deploy infrastructure first
+    
+    # Retry configuration
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Health checks configuration
+  health:
+    - group: apps
+      kind: Deployment
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.readyReplicas ~= nil and obj.status.replicas ~= nil then
+            if obj.status.readyReplicas == obj.status.replicas then
+              hs.status = "Healthy"
+              hs.message = "All replicas are ready"
+            else
+              hs.status = "Progressing"
+              hs.message = "Waiting for replicas to be ready"
+            end
+          else
+            hs.status = "Progressing"
+            hs.message = "Deployment is progressing"
+          end
+        else
+          hs.status = "Progressing"
+          hs.message = "Deployment status not available"
+        end
+        return hs
+  
+  # Ignore differences for certain fields
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP
