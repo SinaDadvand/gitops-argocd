@@ -1,0 +1,36 @@
+# Individual application definition - Helm Staging
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: personal-helm-staging
+  namespace: argocd
+  labels:
+    managed-by: app-of-apps
+    app-type: multi-tier
+    environment: staging
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/SinaDadvand/gitops-argocd.git
+    targetRevision: HEAD
+    path: helm-charts/multi-env-app
+    helm:
+      valueFiles:
+      - values-staging.yaml
+      values: |
+        app:
+          version: "2.0.0"
+        service:
+          nodePort: 30110
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: personal-staging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

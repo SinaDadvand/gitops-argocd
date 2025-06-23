@@ -1,0 +1,41 @@
+# Redis deployment for the App of Apps pattern
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: personal-redis
+  namespace: personal-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: personal-redis
+  template:
+    metadata:
+      labels:
+        app: personal-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: personal-redis-service
+  namespace: personal-redis
+spec:
+  selector:
+    app: personal-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP

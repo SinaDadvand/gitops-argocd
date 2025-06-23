@@ -1,24 +1,23 @@
-# App of Apps - Manages all applications from your Git repository
+# Individual application definition - Nginx App
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: personal-app-of-apps
+  name: personal-nginx-app
   namespace: argocd
   labels:
-    app.kubernetes.io/name: personal-app-of-apps
-    pattern: app-of-apps
+    managed-by: app-of-apps
+    app-type: frontend
 spec:
   project: default
   
   source:
-    # Your personal GitHub repository
     repoURL: https://github.com/SinaDadvand/gitops-argocd.git
     targetRevision: HEAD
-    path: argocd-applications/individual-apps
+    path: gitops-apps/nginx-app
   
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: personal-nginx
   
   syncPolicy:
     automated:
@@ -26,5 +25,3 @@ spec:
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
-    - PrunePropagationPolicy=foreground
-    - PruneLast=true
