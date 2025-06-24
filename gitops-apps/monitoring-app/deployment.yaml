@@ -81,7 +81,8 @@ spec:
   - port: 80
     targetPort: 80
     nodePort: 30120
+    name: http           # ✅ Add required name field
   - port: 9090
     targetPort: 9090
-    name: metrics
+    name: metrics        # ✅ Already has name
   type: NodePort
