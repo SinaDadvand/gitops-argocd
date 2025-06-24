@@ -136,3 +136,33 @@ data:
         add_header X-XSS-Protection "1; mode=block";
         add_header Referrer-Policy strict-origin-when-cross-origin;
     }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-custom-health-check
+  namespace: nginx-demo
+data:
+  # Custom health checks configuration
+  resource.customizations: |
+    apps/Deployment:
+      health.lua: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.readyReplicas ~= nil and obj.status.replicas ~= nil then
+            if obj.status.readyReplicas == obj.status.replicas then
+              hs.status = "Healthy"
+              hs.message = "All replicas are ready"
+            else
+              hs.status = "Progressing"
+              hs.message = "Waiting for replicas to be ready"
+            end
+          else
+            hs.status = "Progressing"
+            hs.message = "Deployment is progressing"
+          end
+        else
+          hs.status = "Progressing"
+          hs.message = "Deployment status not available"
+        end
+        return hs

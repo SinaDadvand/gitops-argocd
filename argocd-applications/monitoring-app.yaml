@@ -15,7 +15,7 @@ spec:
   project: default
   
   source:
-    repoURL: https://github.com/SinaDadvand/k8s-helm.git
+    repoURL: https://github.com/SinaDadvand/gitops-argocd.git
     targetRevision: HEAD
     path: gitops-apps/monitoring-app
   
@@ -44,30 +44,7 @@ spec:
         factor: 2
         maxDuration: 3m
   
-  # Health checks configuration
-  health:
-    - group: apps
-      kind: Deployment
-      check: |
-        hs = {}
-        if obj.status ~= nil then
-          if obj.status.readyReplicas ~= nil and obj.status.replicas ~= nil then
-            if obj.status.readyReplicas == obj.status.replicas then
-              hs.status = "Healthy"
-              hs.message = "All replicas are ready"
-            else
-              hs.status = "Progressing"
-              hs.message = "Waiting for replicas to be ready"
-            end
-          else
-            hs.status = "Progressing"
-            hs.message = "Deployment is progressing"
-          end
-        else
-          hs.status = "Progressing"
-          hs.message = "Deployment status not available"
-        end
-        return hs
+
   
   # Ignore differences for certain fields
   ignoreDifferences:
