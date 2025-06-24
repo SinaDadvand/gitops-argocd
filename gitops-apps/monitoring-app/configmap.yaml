@@ -94,8 +94,8 @@ data:
         </div>
     </body>
     </html>
-  health: "OK"
-  ready: "OK"
+#   health: "OK"
+#   ready: "OK"
 
 ---
 apiVersion: v1
