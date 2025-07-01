@@ -1,4 +1,3 @@
-
 # Production application that uses sealed secrets
 apiVersion: apps/v1
 kind: Deployment
@@ -91,6 +90,12 @@ spec:
         - name: config
           mountPath: /usr/share/nginx/html/index.html
           subPath: index.html
+        - name: config
+          mountPath: /usr/share/nginx/html/health
+          subPath: health
+        - name: config
+          mountPath: /usr/share/nginx/html/ready
+          subPath: ready
         livenessProbe:
           httpGet:
             path: /health
