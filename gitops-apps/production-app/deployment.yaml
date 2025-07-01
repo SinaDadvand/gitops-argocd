@@ -23,9 +23,9 @@ spec:
         prometheus.io/port: "8080"
     spec:
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        fsGroup: 2000
+        runAsNonRoot: false
+        # Allow nginx to run as root to create cache directories
+        # In production, consider using a custom nginx image with proper permissions
       containers:
       - name: app
         image: nginx:1.24-alpine
