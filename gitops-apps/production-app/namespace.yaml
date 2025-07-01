@@ -1,0 +1,10 @@
+# Namespace for production application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production-app
+  labels:
+    name: production-app
+    environment: production
+    managed-by: argocd
+    security-level: high
