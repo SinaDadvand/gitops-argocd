@@ -202,3 +202,5 @@ data:
         </div>
     </body>
     </html>
+  health: "OK"
+  ready: "READY"
