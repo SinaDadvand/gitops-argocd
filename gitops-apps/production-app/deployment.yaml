@@ -31,14 +31,35 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
+          echo "=== INIT CONTAINER DEBUG ==="
+          echo "Checking source directory structure..."
+          ls -la /app-source/
+          echo "Files in /app-source:"
+          find /app-source -type f
+          
+          echo "Creating working directory..."
+          mkdir -p /tmp/app
+          
           echo "Copying application files..."
-          cp -r /app-source/* /tmp/app/
+          cp /app-source/app.js /tmp/app/app.js || echo "Failed to copy app.js"
+          cp /app-source/package.json /tmp/app/package.json || echo "Failed to copy package.json"
+          
+          echo "Files copied to /tmp/app:"
+          ls -la /tmp/app/
+          
           echo "Installing dependencies..."
           npm install --production
-          echo "Dependencies installed successfully"
+          
+          echo "Files after npm install:"
+          ls -la /tmp/app/
+          
           echo "Copying to shared volume..."
           cp -r /tmp/app/* /app-runtime/
-          echo "Init container completed"
+          
+          echo "Files in runtime volume:"
+          ls -la /app-runtime/
+          
+          echo "Init container completed successfully"
         volumeMounts:
         - name: config
           mountPath: /app-source
@@ -52,9 +73,30 @@ spec:
         command: ["sh", "-c"]
         args: 
         - |
+          echo "=== MAIN CONTAINER DEBUG ==="
           echo "Starting Node.js application..."
           echo "Files in /app:"
           ls -la /app/
+          echo "Checking if app.js exists:"
+          if [ -f "/app/app.js" ]; then
+            echo "✅ app.js found"
+            echo "Content preview:"
+            head -10 /app/app.js
+          else
+            echo "❌ app.js NOT found"
+            echo "Available files:"
+            find /app -type f
+            exit 1
+          fi
+          
+          echo "Checking if node_modules exists:"
+          if [ -d "/app/node_modules" ]; then
+            echo "✅ node_modules found"
+            ls -la /app/node_modules/
+          else
+            echo "❌ node_modules NOT found"
+          fi
+          
           echo "Starting server..."
           node app.js
         ports:
@@ -67,47 +109,56 @@ spec:
             secretKeyRef:
               name: database-credentials
               key: host
+              optional: true
         - name: DB_PORT
           valueFrom:
             secretKeyRef:
               name: database-credentials
               key: port
+              optional: true
         - name: DB_NAME
           valueFrom:
             secretKeyRef:
               name: database-credentials
               key: database
+              optional: true
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
               name: database-credentials
               key: username
+              optional: true
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: database-credentials
               key: password
+              optional: true
         # API keys using sealed secrets
         - name: STRIPE_API_KEY
           valueFrom:
             secretKeyRef:
               name: api-keys
               key: stripe-api-key
+              optional: true
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
               name: api-keys
               key: github-token
+              optional: true
         - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:
               name: api-keys
               key: sendgrid-api-key
+              optional: true
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: api-keys
               key: jwt-secret
+              optional: true
         # Application configuration
         - name: APP_ENV
           value: "production"
@@ -120,7 +171,7 @@ spec:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 30
+          initialDelaySeconds: 45
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -128,7 +179,7 @@ spec:
           httpGet:
             path: /ready
             port: 3000
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
