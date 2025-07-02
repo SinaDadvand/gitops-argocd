@@ -23,6 +23,28 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: false
+      # Init container to install dependencies
+      initContainers:
+      - name: npm-install
+        image: node:18-alpine
+        workingDir: /tmp/app
+        command: ["sh", "-c"]
+        args:
+        - |
+          echo "Copying application files..."
+          cp -r /app-source/* /tmp/app/
+          echo "Installing dependencies..."
+          npm install --production
+          echo "Dependencies installed successfully"
+          echo "Copying to shared volume..."
+          cp -r /tmp/app/* /app-runtime/
+          echo "Init container completed"
+        volumeMounts:
+        - name: config
+          mountPath: /app-source
+          readOnly: true
+        - name: app-runtime
+          mountPath: /app-runtime
       containers:
       - name: app
         image: node:18-alpine
@@ -31,10 +53,9 @@ spec:
         args: 
         - |
           echo "Starting Node.js application..."
-          echo "Installing dependencies..."
-          npm install --production
-          echo "Dependencies installed successfully"
-          echo "Starting application..."
+          echo "Files in /app:"
+          ls -la /app/
+          echo "Starting server..."
           node app.js
         ports:
         - containerPort: 3000
@@ -93,13 +114,13 @@ spec:
         - name: APP_VERSION
           value: "1.0.0"
         volumeMounts:
-        - name: config
+        - name: app-runtime
           mountPath: /app
         livenessProbe:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -107,7 +128,7 @@ spec:
           httpGet:
             path: /ready
             port: 3000
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
@@ -122,6 +143,8 @@ spec:
       - name: config
         configMap:
           name: production-app-config
+      - name: app-runtime
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
