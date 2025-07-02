@@ -73,7 +73,7 @@ data:
                 padding: 10px;
                 background: rgba(0, 0, 0, 0.2);
                 border-radius: 8px;
-                border-left: 4px solid #e74c3c;
+                border-left: 4px solid #27ae60;
             }
             .secret-masked {
                 font-family: 'Courier New', monospace;
@@ -81,6 +81,14 @@ data:
                 padding: 3px 8px;
                 border-radius: 4px;
                 color: #ecf0f1;
+            }
+            .secret-env {
+                font-family: 'Courier New', monospace;
+                background: #27ae60;
+                padding: 3px 8px;
+                border-radius: 4px;
+                color: white;
+                font-weight: bold;
             }
             .status-indicator {
                 display: inline-block;
@@ -108,8 +116,24 @@ data:
                 background: #3498db;
                 color: white;
             }
+            .env-demo {
+                background: rgba(39, 174, 96, 0.1);
+                border: 1px solid #27ae60;
+                padding: 15px;
+                border-radius: 8px;
+                margin-top: 15px;
+            }
+            .env-demo h4 {
+                color: #27ae60;
+                margin-top: 0;
+            }
         </style>
         <script>
+            function maskSecret(value, prefixLength = 4) {
+                if (!value) return '****';
+                return value.substring(0, prefixLength) + '****';
+            }
+            
             function updateStatus() {
                 document.getElementById('timestamp').textContent = new Date().toLocaleString();
                 
@@ -119,10 +143,28 @@ data:
                 
                 // Update connection status
                 const dbStatus = document.getElementById('db-status');
-                dbStatus.innerHTML = '<span class="status-indicator status-ok"></span>Database connection established';
+                dbStatus.innerHTML = '<span class="status-indicator status-ok"></span>Database connection ready';
                 
                 const apiStatus = document.getElementById('api-status');
-                apiStatus.innerHTML = '<span class="status-indicator status-ok"></span>API keys validated';
+                apiStatus.innerHTML = '<span class="status-indicator status-ok"></span>API keys loaded from environment';
+                
+                // Show environment variable information
+                updateEnvInfo();
+            }
+            
+            function updateEnvInfo() {
+                // Note: In a real application, these would come from server-side endpoints
+                // For demo purposes, we show what the environment variables would contain
+                const envInfo = document.getElementById('env-info');
+                envInfo.innerHTML = `
+                    <h4>🔍 Environment Variables Status:</h4>
+                    <p><strong>DB_HOST:</strong> <span class="secret-env">Set from sealed secret ✓</span></p>
+                    <p><strong>DB_USERNAME:</strong> <span class="secret-env">Set from sealed secret ✓</span></p>
+                    <p><strong>STRIPE_API_KEY:</strong> <span class="secret-env">Set from sealed secret ✓</span></p>
+                    <p><strong>GITHUB_TOKEN:</strong> <span class="secret-env">Set from sealed secret ✓</span></p>
+                    <p><strong>JWT_SECRET:</strong> <span class="secret-env">Set from sealed secret ✓</span></p>
+                    <small>💡 Run 'kubectl exec deployment/production-app -- printenv | grep -E "DB_|STRIPE_|GITHUB_|JWT_"' to see actual values</small>
+                `;
             }
             
             setInterval(updateStatus, 10000);
@@ -155,9 +197,9 @@ data:
                 <div class="info-card">
                     <h3>🗄️ Database Configuration</h3>
                     <div class="secret-item">
-                        <strong>Host:</strong> <span class="secret-masked">*****.production.svc</span><br>
-                        <strong>Database:</strong> <span class="secret-masked">production_**</span><br>
-                        <strong>Username:</strong> <span class="secret-masked">*****</span><br>
+                        <strong>Host:</strong> <span class="secret-masked">postgresql.production.svc****</span><br>
+                        <strong>Database:</strong> <span class="secret-masked">production_****</span><br>
+                        <strong>Username:</strong> <span class="secret-masked">admin****</span><br>
                         <strong>Status:</strong> <span id="db-status">Checking...</span>
                     </div>
                 </div>
@@ -165,7 +207,7 @@ data:
                 <div class="info-card">
                     <h3>🔗 API Integrations</h3>
                     <div class="secret-item">
-                        <strong>Stripe API:</strong> <span class="secret-masked">sk_****</span><br>
+                        <strong>Stripe API:</strong> <span class="secret-masked">sk_test****</span><br>
                         <strong>GitHub Token:</strong> <span class="secret-masked">ghp_****</span><br>
                         <strong>SendGrid:</strong> <span class="secret-masked">SG.****</span><br>
                         <strong>JWT Secret:</strong> <span class="secret-masked">****</span><br>
@@ -186,12 +228,16 @@ data:
                 </div>
             </div>
             
+            <div class="env-demo">
+                <div id="env-info">Loading environment variable status...</div>
+            </div>
+            
             <div class="endpoints">
                 <h3>🔗 Application Endpoints</h3>
                 <a href="/health">Health Check</a>
+                <a href="/ready">Ready Check</a>
                 <a href="/metrics">Metrics</a>
                 <a href="/config">Configuration</a>
-                <a href="/secrets-status">Secrets Status</a>
             </div>
             
             <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
