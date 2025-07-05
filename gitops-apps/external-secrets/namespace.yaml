@@ -1,0 +1,9 @@
+# Namespace for External Secrets Operator
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets-system
+  labels:
+    name: external-secrets-system
+    managed-by: argocd
+    security-tier: critical
