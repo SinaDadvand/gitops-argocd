@@ -30,7 +30,6 @@ spec:
         - --concurrent=1
         - --enable-leader-election
         - --metrics-addr=:8080
-        - --health-addr=:8081
         ports:
         - containerPort: 8080
           name: metrics
@@ -41,15 +40,11 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: health
-          initialDelaySeconds: 15
-          periodSeconds: 20
+            port: 8080  # Use metrics port instead
         readinessProbe:
           httpGet:
             path: /readyz
-            port: health
-          initialDelaySeconds: 5
-          periodSeconds: 10
+            port: 8080  # Use metrics port instead
         resources:
           requests:
             cpu: 100m
