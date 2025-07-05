@@ -24,7 +24,7 @@ spec:
         fsGroup: 65534
       containers:
       - name: controller
-        image: ghcr.io/external-secrets/external-secrets:v0.9.11
+        image: ghcr.io/external-secrets/external-secrets:v0.9.19
         imagePullPolicy: IfNotPresent
         args:
         - --concurrent=1
